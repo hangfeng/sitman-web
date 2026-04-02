@@ -7,10 +7,37 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+:root {
+  --bg-start: #eef3f8;
+  --bg-end: #f9fbfd;
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-strong: rgba(255, 255, 255, 0.92);
+  --surface-soft: rgba(255, 255, 255, 0.56);
+  --surface-muted: rgba(245, 248, 252, 0.88);
+  --text-primary: #18212f;
+  --text-secondary: #607086;
+  --text-soft: #8d99ab;
+  --accent: #0a84ff;
+  --accent-strong: #0071e3;
+  --accent-soft: rgba(10, 132, 255, 0.14);
+  --accent-warm: #ff9f0a;
+  --border: rgba(124, 142, 164, 0.22);
+  --border-strong: rgba(124, 142, 164, 0.34);
+  --shadow: 0 20px 50px rgba(135, 149, 166, 0.18);
+  --shadow-soft: 0 10px 26px rgba(135, 149, 166, 0.12);
+  --danger: #ff5f57;
+  --success: #30d158;
+  --modal-overlay: rgba(226, 232, 240, 0.48);
+  --scrollbar: rgba(124, 142, 164, 0.42);
+}
+
 body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: #1a1a2e;
-  color: #e0e0e0;
+  font-family: "SF Pro Text", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,0.92), transparent 32%),
+    radial-gradient(circle at top right, rgba(10,132,255,0.08), transparent 28%),
+    linear-gradient(135deg, var(--bg-start), var(--bg-end));
+  color: var(--text-primary);
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -20,59 +47,126 @@ body {
 
 /* ===== 标题栏 ===== */
 #titlebar {
-  background: #0f3460;
-  padding: 6px 12px;
+  background: var(--surface);
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   gap: 10px;
-  border-bottom: 1px solid #e94560;
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
   flex-shrink: 0;
 }
-#titlebar h1 { font-size: 15px; font-weight: 700; color: #e94560; }
-#current-file-name { color: #aaa; font-size: 12px; }
-#play-status { margin-left: auto; font-size: 11px; color: #FFD700; }
+#titlebar h1 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+#current-file-name {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+#play-status {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--accent);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(255,255,255,0.7);
+}
+#theme-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
+}
+.theme-chip {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.92);
+  box-shadow: 0 2px 8px rgba(68, 84, 106, 0.16);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.theme-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(68, 84, 106, 0.22);
+}
+.theme-chip.active {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.theme-chip[data-theme="classic"] { background: linear-gradient(135deg, #0a84ff, #7cc4ff); }
+.theme-chip[data-theme="mint"] { background: linear-gradient(135deg, #34c759, #9be7a8); }
+.theme-chip[data-theme="graphite"] { background: linear-gradient(135deg, #5e5ce6, #9c9af6); }
+.theme-chip[data-theme="sand"] { background: linear-gradient(135deg, #c98b2e, #e5bf77); }
 
 /* ===== 三栏布局 ===== */
 #main-layout {
   display: flex;
   flex: 1;
   overflow: hidden;
+  gap: 14px;
+  padding: 14px;
 }
 
 /* ===== 左栏 ===== */
 #left-panel {
   width: 180px;
-  background: #16213e;
+  background: var(--surface);
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #0f3460;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
   flex-shrink: 0;
+  overflow: hidden;
 }
 #left-panel .panel-title {
-  background: #0f3460;
-  padding: 6px 10px;
+  background: var(--surface-strong);
+  padding: 10px 12px;
   font-size: 11px;
   font-weight: 700;
-  color: #FFD700;
+  color: var(--text-secondary);
   letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
 }
 #file-list {
   flex: 1;
   overflow-y: auto;
-  padding: 4px 0;
+  padding: 8px;
 }
 .file-item {
-  padding: 6px 10px;
+  padding: 9px 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 4px;
-  border-bottom: 1px solid #0f3460;
-  transition: background 0.15s;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  margin-bottom: 6px;
 }
-.file-item:hover { background: #0f3460; }
-.file-item.active { background: #e94560; }
+.file-item:hover {
+  background: var(--surface-soft);
+  border-color: var(--border);
+  transform: translateY(-1px);
+}
+.file-item.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 12px 22px rgba(10, 132, 255, 0.18);
+}
 .file-item .fname {
   font-size: 11px;
   overflow: hidden;
@@ -82,37 +176,54 @@ body {
 }
 .file-item .del-btn {
   font-size: 11px;
-  color: #aaa;
+  color: inherit;
+  opacity: 0.65;
   background: none;
   border: none;
   cursor: pointer;
   padding: 0 2px;
   flex-shrink: 0;
 }
-.file-item .del-btn:hover { color: #e94560; }
+.file-item .del-btn:hover { opacity: 1; color: var(--danger); }
 #left-actions {
-  padding: 8px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border-top: 1px solid #0f3460;
+  border-top: 1px solid var(--border);
 }
 .btn {
-  background: #0f3460;
-  color: #e0e0e0;
-  border: 1px solid #1a3a6e;
-  border-radius: 4px;
-  padding: 5px 8px;
+  display: block;
+  background: var(--surface-strong);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 10px;
   cursor: pointer;
   font-size: 11px;
-  transition: background 0.15s;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
   text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+  user-select: none;
 }
-.btn:hover { background: #1a3a6e; }
-.btn.primary { background: #e94560; border-color: #e94560; }
-.btn.primary:hover { background: #c73652; }
-.btn.gold { background: #b8960c; border-color: #FFD700; color: #fff; }
-.btn.gold:hover { background: #FFD700; color: #1a1a2e; }
+.btn:hover {
+  background: var(--surface-soft);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+.btn.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(10, 132, 255, 0.22);
+}
+.btn.primary:hover { filter: brightness(1.03); }
+.btn.gold {
+  background: linear-gradient(135deg, var(--accent-warm), #ffb547);
+  border-color: transparent;
+  color: #fff;
+}
+.btn.gold:hover { filter: brightness(1.04); }
 
 /* ===== 中栏 ===== */
 #center-panel {
@@ -121,13 +232,17 @@ body {
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
+  gap: 14px;
 }
 
 /* 播放控制栏 */
 #player-bar {
-  background: #0f3460;
-  padding: 8px 12px;
-  border-bottom: 1px solid #e94560;
+  background: var(--surface);
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
   flex-shrink: 0;
 }
 #progress-row {
@@ -145,7 +260,8 @@ body {
   appearance: none;
   height: 6px;
   border-radius: 3px;
-  background: #16213e;
+  width: 100%;
+  background: rgba(136, 151, 170, 0.22);
   cursor: pointer;
   outline: none;
 }
@@ -153,10 +269,19 @@ body {
   -webkit-appearance: none;
   width: 14px; height: 14px;
   border-radius: 50%;
-  background: #FFD700;
+  background: #fff;
+  border: 3px solid var(--accent);
+  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.2);
   cursor: pointer;
 }
-#time-display { font-size: 12px; color: #FFD700; white-space: nowrap; min-width: 100px; text-align: right; }
+#time-display {
+  font-size: 12px;
+  color: var(--accent);
+  white-space: nowrap;
+  min-width: 100px;
+  text-align: right;
+  font-weight: 600;
+}
 #controls-row {
   display: flex;
   align-items: center;
@@ -164,184 +289,220 @@ body {
   flex-wrap: wrap;
 }
 .ctrl-btn {
-  background: #16213e;
-  color: #e0e0e0;
-  border: 1px solid #1a3a6e;
-  border-radius: 4px;
-  padding: 4px 10px;
+  background: var(--surface-strong);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 7px 12px;
   cursor: pointer;
   font-size: 12px;
-  transition: background 0.15s;
+  transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
 }
-.ctrl-btn:hover { background: #1a3a6e; }
-.ctrl-btn.active { background: #e94560; border-color: #e94560; }
+.ctrl-btn:hover {
+  background: var(--surface-soft);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+.ctrl-btn.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  border-color: transparent;
+  color: #fff;
+}
 #speed-select {
-  background: #16213e;
-  color: #FFD700;
-  border: 1px solid #1a3a6e;
-  border-radius: 4px;
-  padding: 4px 6px;
+  background: var(--surface-strong);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px 10px;
   font-size: 12px;
   cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
 }
-#ab-info { font-size: 11px; color: #FFD700; }
+#ab-info {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+}
 
 /* 标注内容区 */
 #notes-area {
   flex: 1;
-  background: #0d2137;
   overflow-y: auto;
-  padding: 10px 12px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .note-block {
-  background: rgba(0,0,0,0.25);
-  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
   overflow: hidden;
 }
 .note-block-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 10px;
-  background: rgba(0,0,0,0.35);
+  padding: 11px 14px;
+  background: var(--surface-strong);
   cursor: pointer;
   user-select: none;
+  border-bottom: 1px solid var(--border);
 }
 .note-block-title {
-  color: #ff4444;
+  color: var(--text-primary);
   font-weight: 700;
   font-size: 13px;
 }
-.note-block-toggle { color: #FFD700; font-size: 12px; }
-.note-block-body { padding: 8px 10px; }
+.note-block-toggle { color: var(--accent); font-size: 12px; }
+.note-block-body { padding: 12px 14px; background: var(--surface-soft); }
 .note-block-body.collapsed { display: none; }
 
 .note-edit {
   width: 100%;
   min-height: 80px;
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 4px;
-  padding: 6px 8px;
+  background: rgba(255,255,255,0.78);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
   font-size: 12px;
   line-height: 1.5;
   outline: none;
   resize: vertical;
   font-family: inherit;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
 }
-.note-edit:focus { border-color: #FFD700; background: rgba(255,255,255,0.15); }
+.note-edit:focus {
+  border-color: rgba(10, 132, 255, 0.38);
+  background: rgba(255,255,255,0.92);
+}
 
 /* contenteditable 渲染区 */
 .note-rendered {
   min-height: 80px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 4px;
-  padding: 6px 8px;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
   font-size: 12px;
   line-height: 1.7;
-  color: #fff;
+  color: var(--text-primary);
   white-space: pre-wrap;
   word-break: break-word;
   outline: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
 }
-.note-rendered:focus { border-color: #FFD700; background: rgba(255,255,255,0.15); }
-.note-rendered:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.4); }
+.note-rendered:focus {
+  border-color: rgba(10, 132, 255, 0.38);
+  background: rgba(255,255,255,0.92);
+}
+.note-rendered:empty::before { content: attr(data-placeholder); color: var(--text-soft); }
 
 .ts-link {
-  color: #FFD700;
+  color: var(--accent);
   cursor: pointer;
   text-decoration: underline;
   font-weight: 600;
 }
-.ts-link:hover { color: #fff; }
+.ts-link:hover { color: var(--accent-strong); }
 
 .note-view {
   min-height: 60px;
-  padding: 8px;
-  color: #e0e0e0;
+  padding: 10px 12px;
+  color: var(--text-primary);
   line-height: 1.7;
   cursor: text;
   white-space: pre-wrap;
   word-break: break-word;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid var(--border);
 }
 .note-view .ts-link {
-  color: #FFD700;
+  color: var(--accent);
   cursor: pointer;
   text-decoration: underline;
   font-weight: bold;
 }
-.note-view .ts-link:hover { color: #FFA500; }
+.note-view .ts-link:hover { color: var(--accent-strong); }
 
 /* 听写区 */
 #dictation-wrap { display: flex; flex-direction: column; gap: 6px; }
 #dictation-textarea {
   width: 100%;
   min-height: 100px;
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 4px;
-  padding: 6px 8px;
+  background: rgba(255,255,255,0.82);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
   font-size: 12px;
   line-height: 1.5;
   outline: none;
   resize: vertical;
   font-family: inherit;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
 }
-#dictation-textarea:focus { border-color: #FFD700; }
+#dictation-textarea:focus { border-color: rgba(10, 132, 255, 0.38); }
 #dictation-actions { display: flex; gap: 6px; }
 
 /* ===== 右栏 ===== */
 #right-panel {
   width: 160px;
-  background: #16213e;
+  background: var(--surface);
   display: flex;
   flex-direction: column;
-  border-left: 1px solid #0f3460;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
   flex-shrink: 0;
+  overflow: hidden;
 }
 #right-panel .panel-title {
-  background: #0f3460;
-  padding: 6px 10px;
+  background: var(--surface-strong);
+  padding: 10px 12px;
   font-size: 11px;
   font-weight: 700;
-  color: #FFD700;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
 }
 #segment-list {
   flex: 1;
   overflow-y: auto;
-  padding: 4px 0;
+  padding: 8px;
 }
 .seg-item {
-  padding: 5px 10px;
+  padding: 8px 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #0f3460;
+  border: 1px solid transparent;
+  border-radius: 14px;
   font-size: 12px;
-  transition: background 0.15s;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  margin-bottom: 6px;
 }
-.seg-item:hover { background: #0f3460; }
-.seg-item .seg-time { color: #FFD700; font-family: monospace; }
+.seg-item:hover { background: var(--surface-soft); border-color: var(--border); }
+.seg-item .seg-time { color: var(--accent); font-family: monospace; font-weight: 600; }
 .seg-item .seg-del {
   background: none;
   border: none;
-  color: #666;
+  color: var(--text-soft);
   cursor: pointer;
   font-size: 11px;
   padding: 0;
 }
-.seg-item .seg-del:hover { color: #e94560; }
+.seg-item .seg-del:hover { color: var(--danger); }
 #right-actions {
-  padding: 8px;
-  border-top: 1px solid #0f3460;
+  padding: 12px;
+  border-top: 1px solid var(--border);
 }
 
 /* ===== 批改对话框 ===== */
@@ -349,33 +510,37 @@ body {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: var(--modal-overlay);
   z-index: 1000;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(20px);
 }
 #modal-overlay.open { display: flex; }
 #modal-box {
-  background: #16213e;
-  border: 1px solid #0f3460;
-  border-radius: 8px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 24px;
   width: 700px;
   max-width: 95vw;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(24px);
 }
 #modal-header {
-  background: #0f3460;
-  padding: 10px 14px;
+  background: var(--surface);
+  padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-bottom: 1px solid var(--border);
 }
-#modal-header h2 { font-size: 14px; color: #FFD700; }
-#modal-close { background: none; border: none; color: #aaa; font-size: 18px; cursor: pointer; }
-#modal-close:hover { color: #fff; }
+#modal-header h2 { font-size: 14px; color: var(--text-primary); }
+#modal-close { background: none; border: none; color: var(--text-secondary); font-size: 18px; cursor: pointer; }
+#modal-close:hover { color: var(--text-primary); }
 #modal-body {
   display: flex;
   gap: 0;
@@ -390,47 +555,79 @@ body {
   flex-direction: column;
   gap: 8px;
 }
-.modal-col:first-child { border-right: 1px solid #0f3460; }
-.modal-col label { font-size: 11px; color: #aaa; font-weight: 700; }
+.modal-col:first-child { border-right: 1px solid var(--border); }
+.modal-col label { font-size: 11px; color: var(--text-secondary); font-weight: 700; }
 #my-answer-display {
-  background: rgba(255,255,255,0.05);
-  border-radius: 4px;
-  padding: 8px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 14px;
+  padding: 10px 12px;
   font-size: 13px;
   line-height: 1.8;
   min-height: 100px;
+  border: 1px solid var(--border);
 }
 #ref-answer-input {
   width: 100%;
   min-height: 120px;
-  background: rgba(255,255,255,0.07);
-  color: #fff;
-  border: 1px solid #1a3a6e;
-  border-radius: 4px;
-  padding: 8px;
+  background: rgba(255,255,255,0.82);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
   font-size: 12px;
   resize: vertical;
   font-family: inherit;
 }
 #modal-footer {
-  padding: 10px 14px;
-  background: #0f3460;
+  padding: 12px 16px;
+  background: var(--surface);
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  border-top: 1px solid var(--border);
 }
-.word-correct { color: #4CAF50; font-weight: 600; }
-.word-wrong { color: #e94560; font-weight: 600; text-decoration: line-through; }
-.word-missing { color: #FF9800; font-style: italic; }
+.word-correct { color: var(--success); font-weight: 600; }
+.word-wrong { color: var(--danger); font-weight: 600; text-decoration: line-through; }
+.word-missing { color: var(--accent-warm); font-style: italic; }
 
-/* ===== 隐藏文件输入 ===== */
-#file-input { display: none; }
+/* ===== 原生文件输入 ===== */
+.native-file-input {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-strong);
+  color: var(--text-secondary);
+  font: inherit;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+}
+.native-file-input::-webkit-file-upload-button {
+  margin-right: 10px;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.native-file-input::file-selector-button {
+  margin-right: 10px;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
 
 /* ===== 滚动条 ===== */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #1a3a6e; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #0f3460; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-soft); }
 
 /* ===== 无文件提示 ===== */
 #no-file-hint {
@@ -438,23 +635,231 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(160,200,220,0.7);
+  color: var(--text-secondary);
   font-size: 14px;
-  background: #0d2137;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+  padding: 24px;
+  text-align: center;
+}
+#no-file-hint .hint-banner {
+  text-align: center;
+  line-height: 1.8;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ===== 手机适配 ===== */
+@media (max-width: 900px) {
+  body {
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
+    font-size: 14px;
+  }
+
+  #titlebar {
+    padding: 10px 12px;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+  }
+  #titlebar h1 { font-size: 16px; }
+  #current-file-name {
+    width: 100%;
+    order: 3;
+    font-size: 12px;
+  }
+  #play-status {
+    margin-left: 0;
+    margin-left: auto;
+    order: 2;
+  }
+  #theme-switcher {
+    order: 4;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  #main-layout {
+    flex-direction: column;
+    overflow: visible;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  #center-panel,
+  #left-panel,
+  #right-panel {
+    width: 100%;
+    min-width: 0;
+    border: none;
+  }
+
+  #center-panel { order: 1; }
+  #left-panel {
+    order: 2;
+  }
+  #right-panel { order: 3; }
+
+  #left-panel .panel-title,
+  #right-panel .panel-title {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  #file-list,
+  #segment-list {
+    max-height: 220px;
+  }
+
+  .file-item,
+  .seg-item {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  #left-actions,
+  #right-actions {
+    padding: 12px;
+  }
+
+  .btn,
+  .ctrl-btn,
+  #speed-select {
+    min-height: 36px;
+    font-size: 13px;
+  }
+
+  #player-bar {
+    padding: 10px 12px;
+  }
+
+  #progress-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  #time-display {
+    min-width: 0;
+    text-align: left;
+  }
+
+  #controls-row {
+    gap: 8px;
+  }
+
+  #controls-row > span[style*="width:1px"] {
+    display: none !important;
+  }
+
+  .note-block-title {
+    font-size: 14px;
+  }
+
+  .note-rendered,
+  .note-view,
+  .note-edit,
+  #dictation-textarea {
+    font-size: 13px;
+    min-height: 96px;
+  }
+
+  #dictation-actions {
+    flex-wrap: wrap;
+  }
+
+  #modal-box {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+    max-height: 88vh;
+  }
+
+  #modal-body {
+    flex-direction: column;
+  }
+
+  .modal-col:first-child {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 520px) {
+  body {
+    font-size: 15px;
+  }
+
+  #titlebar {
+    padding: 10px;
+  }
+
+  #player-bar,
+  #left-actions,
+  #right-actions {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  #left-panel,
+  #right-panel,
+  #player-bar,
+  #no-file-hint,
+  .note-block {
+    border-radius: 18px;
+  }
+
+  .ctrl-btn {
+    flex: 1 1 calc(50% - 8px);
+    text-align: center;
+    padding: 7px 8px;
+  }
+
+  #speed-select {
+    width: 100%;
+  }
+
+  #ab-info {
+    width: 100%;
+    order: 10;
+  }
+
+  .file-item .fname,
+  .seg-item .seg-time {
+    font-size: 12px;
+  }
+
+  #modal-header,
+  #modal-footer {
+    padding: 10px;
+  }
+
+  .modal-col {
+    padding: 10px;
+  }
 }
 </style>
 </head>
 <body>
-
-<!-- 隐藏文件输入 -->
-<input type="file" id="file-input" accept="audio/*,video/*,video/mp4,video/webm,video/ogg,video/quicktime">
-<input type="file" id="folder-input" accept="audio/*,video/*" webkitdirectory multiple style="display:none">
 
 <!-- 标题栏 -->
 <div id="titlebar">
   <h1>SitMan Web</h1>
   <span id="current-file-name">未选择文件</span>
   <span id="play-status">●</span>
+  <div id="theme-switcher" aria-label="主题切换">
+    <button class="theme-chip active" data-theme="classic" title="经典蓝" aria-label="经典蓝"></button>
+    <button class="theme-chip" data-theme="mint" title="薄荷绿" aria-label="薄荷绿"></button>
+    <button class="theme-chip" data-theme="graphite" title="石墨灰" aria-label="石墨灰"></button>
+    <button class="theme-chip" data-theme="sand" title="暖沙金" aria-label="暖沙金"></button>
+  </div>
 </div>
 
 <!-- 三栏 -->
@@ -465,8 +870,8 @@ body {
     <div class="panel-title">课程列表</div>
     <div id="file-list"></div>
     <div id="left-actions">
-      <button class="btn primary" onclick="triggerFileInput()">+ 导入文件</button>
-      <button class="btn" onclick="triggerFolderInput()" style="margin-top:4px;">📁 导入文件夹</button>
+      <input class="native-file-input" type="file" id="file-input" accept="audio/*,video/*,.mp3,.m4a,.aac,.wav,.flac,.ogg,.mp4,.mov,.m4v,.webm">
+      <input class="native-file-input" type="file" id="folder-input" accept="audio/*,video/*,.mp3,.m4a,.aac,.wav,.flac,.ogg,.mp4,.mov,.m4v,.webm" webkitdirectory multiple style="margin-top:4px;">
       <button class="btn" onclick="clearAllFiles()" style="margin-top:4px;color:#ff6b6b;">✕ 清空列表</button>
     </div>
   </div>
@@ -488,14 +893,14 @@ body {
         <button class="ctrl-btn" id="btn-play" onclick="togglePlay()" title="播放/暂停">▶ 播放</button>
         <button class="ctrl-btn" id="btn-forward" onclick="skip(SKIP_SECONDS)" title="前进5s">+5s ⏭</button>
         <button class="ctrl-btn" id="btn-stop" onclick="stopAudio()" title="停止">⏹</button>
-        <span style="width:1px;background:#1a3a6e;height:20px;display:inline-block;margin:0 2px;"></span>
+        <span style="width:1px;background:var(--border-strong);height:20px;display:inline-block;margin:0 2px;"></span>
         <button class="ctrl-btn" id="btn-set-a" onclick="setPointA()" title="设置A点">A</button>
         <button class="ctrl-btn" id="btn-set-b" onclick="setPointB()" title="设置B点">B</button>
         <button class="ctrl-btn" id="btn-ab-loop" onclick="toggleABLoop()" title="A-B循环">A↔B</button>
         <button class="ctrl-btn" id="btn-clear-ab" onclick="clearAB()" title="清除AB点">清除AB</button>
         <span id="ab-info">A:-- B:--</span>
         <span style="margin-left:auto;"></span>
-        <label style="font-size:11px;color:#aaa;">速度:</label>
+        <label style="font-size:11px;color:var(--text-secondary);">速度:</label>
         <select id="speed-select" onchange="setSpeed(this.value)">
           <option value="0.5">0.5x</option>
           <option value="0.75">0.75x</option>
@@ -620,6 +1025,137 @@ function lsSet(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
 }
 
+const THEMES = {
+  classic: {
+    bgStart: '#eef3f8',
+    bgEnd: '#f9fbfd',
+    surface: 'rgba(255, 255, 255, 0.72)',
+    surfaceStrong: 'rgba(255, 255, 255, 0.92)',
+    surfaceSoft: 'rgba(255, 255, 255, 0.56)',
+    surfaceMuted: 'rgba(245, 248, 252, 0.88)',
+    textPrimary: '#18212f',
+    textSecondary: '#607086',
+    textSoft: '#8d99ab',
+    accent: '#0a84ff',
+    accentStrong: '#0071e3',
+    accentSoft: 'rgba(10, 132, 255, 0.14)',
+    accentWarm: '#ff9f0a',
+    border: 'rgba(124, 142, 164, 0.22)',
+    borderStrong: 'rgba(124, 142, 164, 0.34)',
+    shadow: '0 20px 50px rgba(135, 149, 166, 0.18)',
+    shadowSoft: '0 10px 26px rgba(135, 149, 166, 0.12)',
+    danger: '#ff5f57',
+    success: '#30d158',
+    modalOverlay: 'rgba(226, 232, 240, 0.48)',
+    scrollbar: 'rgba(124, 142, 164, 0.42)'
+  },
+  mint: {
+    bgStart: '#eef8f3',
+    bgEnd: '#fbfefb',
+    surface: 'rgba(255, 255, 255, 0.74)',
+    surfaceStrong: 'rgba(255, 255, 255, 0.94)',
+    surfaceSoft: 'rgba(244, 255, 248, 0.62)',
+    surfaceMuted: 'rgba(245, 251, 247, 0.9)',
+    textPrimary: '#173228',
+    textSecondary: '#5d7b70',
+    textSoft: '#90a59d',
+    accent: '#34c759',
+    accentStrong: '#22a548',
+    accentSoft: 'rgba(52, 199, 89, 0.14)',
+    accentWarm: '#ff9f0a',
+    border: 'rgba(109, 153, 131, 0.22)',
+    borderStrong: 'rgba(109, 153, 131, 0.34)',
+    shadow: '0 20px 50px rgba(129, 161, 141, 0.16)',
+    shadowSoft: '0 10px 26px rgba(129, 161, 141, 0.11)',
+    danger: '#ff5f57',
+    success: '#16a34a',
+    modalOverlay: 'rgba(232, 242, 236, 0.5)',
+    scrollbar: 'rgba(109, 153, 131, 0.42)'
+  },
+  graphite: {
+    bgStart: '#edf0f5',
+    bgEnd: '#f7f8fb',
+    surface: 'rgba(255, 255, 255, 0.7)',
+    surfaceStrong: 'rgba(255, 255, 255, 0.92)',
+    surfaceSoft: 'rgba(244, 245, 249, 0.62)',
+    surfaceMuted: 'rgba(241, 243, 247, 0.9)',
+    textPrimary: '#20273a',
+    textSecondary: '#6a7286',
+    textSoft: '#939aac',
+    accent: '#5e5ce6',
+    accentStrong: '#4946c9',
+    accentSoft: 'rgba(94, 92, 230, 0.14)',
+    accentWarm: '#ff9f0a',
+    border: 'rgba(124, 132, 158, 0.24)',
+    borderStrong: 'rgba(124, 132, 158, 0.36)',
+    shadow: '0 20px 50px rgba(126, 135, 159, 0.17)',
+    shadowSoft: '0 10px 26px rgba(126, 135, 159, 0.12)',
+    danger: '#ff5f57',
+    success: '#30d158',
+    modalOverlay: 'rgba(232, 235, 243, 0.52)',
+    scrollbar: 'rgba(124, 132, 158, 0.44)'
+  },
+  sand: {
+    bgStart: '#f8f2e8',
+    bgEnd: '#fcfaf6',
+    surface: 'rgba(255, 251, 245, 0.74)',
+    surfaceStrong: 'rgba(255, 253, 249, 0.94)',
+    surfaceSoft: 'rgba(255, 248, 239, 0.62)',
+    surfaceMuted: 'rgba(251, 246, 239, 0.9)',
+    textPrimary: '#3a2d1f',
+    textSecondary: '#88725b',
+    textSoft: '#ac9885',
+    accent: '#c98b2e',
+    accentStrong: '#ad7421',
+    accentSoft: 'rgba(201, 139, 46, 0.16)',
+    accentWarm: '#ffb340',
+    border: 'rgba(160, 128, 92, 0.24)',
+    borderStrong: 'rgba(160, 128, 92, 0.36)',
+    shadow: '0 20px 50px rgba(168, 142, 110, 0.16)',
+    shadowSoft: '0 10px 26px rgba(168, 142, 110, 0.11)',
+    danger: '#ff5f57',
+    success: '#2bb673',
+    modalOverlay: 'rgba(245, 236, 224, 0.52)',
+    scrollbar: 'rgba(160, 128, 92, 0.44)'
+  }
+};
+
+function syncThemeChips(name) {
+  document.querySelectorAll('.theme-chip').forEach((chip) => {
+    chip.classList.toggle('active', chip.dataset.theme === name);
+  });
+}
+
+function applyTheme(name) {
+  const themeName = THEMES[name] ? name : 'classic';
+  const theme = THEMES[themeName];
+  const root = document.documentElement.style;
+  root.setProperty('--bg-start', theme.bgStart);
+  root.setProperty('--bg-end', theme.bgEnd);
+  root.setProperty('--surface', theme.surface);
+  root.setProperty('--surface-strong', theme.surfaceStrong);
+  root.setProperty('--surface-soft', theme.surfaceSoft);
+  root.setProperty('--surface-muted', theme.surfaceMuted);
+  root.setProperty('--text-primary', theme.textPrimary);
+  root.setProperty('--text-secondary', theme.textSecondary);
+  root.setProperty('--text-soft', theme.textSoft);
+  root.setProperty('--accent', theme.accent);
+  root.setProperty('--accent-strong', theme.accentStrong);
+  root.setProperty('--accent-soft', theme.accentSoft);
+  root.setProperty('--accent-warm', theme.accentWarm);
+  root.setProperty('--border', theme.border);
+  root.setProperty('--border-strong', theme.borderStrong);
+  root.setProperty('--shadow', theme.shadow);
+  root.setProperty('--shadow-soft', theme.shadowSoft);
+  root.setProperty('--danger', theme.danger);
+  root.setProperty('--success', theme.success);
+  root.setProperty('--modal-overlay', theme.modalOverlay);
+  root.setProperty('--scrollbar', theme.scrollbar);
+  document.body.dataset.theme = themeName;
+  syncThemeChips(themeName);
+  try { localStorage.setItem('sitman-theme', themeName); } catch (e) {}
+}
+
 function fmtTime(s) {
   if (isNaN(s) || s < 0) s = 0;
   const h = Math.floor(s / 3600);
@@ -680,17 +1216,30 @@ function triggerFolderInput() {
 }
 
 const MEDIA_TYPES = /^(audio|video)\//;
+const MEDIA_EXTENSIONS = /\.(mp3|m4a|aac|wav|flac|ogg|mp4|mov|m4v|webm)$/i;
+
+function isMediaFile(file) {
+  return MEDIA_TYPES.test(file.type || '') || MEDIA_EXTENSIONS.test(file.name || '');
+}
 
 document.getElementById('file-input').addEventListener('change', function(e) {
   const file = e.target.files[0];
-  if (!file) return;
+  if (!file) {
+    document.getElementById('play-status').textContent = '未选择文件';
+    return;
+  }
+  document.getElementById('play-status').textContent = `读取中 ${file.name}`;
   registerFile(file);
   e.target.value = '';
 });
 
 document.getElementById('folder-input').addEventListener('change', function(e) {
-  const files = Array.from(e.target.files).filter(f => MEDIA_TYPES.test(f.type) && !f.name.startsWith('._'));
-  if (files.length === 0) return;
+  const files = Array.from(e.target.files).filter(f => isMediaFile(f) && !f.name.startsWith('._'));
+  if (files.length === 0) {
+    document.getElementById('play-status').textContent = '未识别到可导入媒体';
+    return;
+  }
+  document.getElementById('play-status').textContent = `批量导入 ${files.length} 个文件`;
   files.forEach(f => registerFile(f));
   e.target.value = '';
 });
@@ -698,6 +1247,7 @@ document.getElementById('folder-input').addEventListener('change', function(e) {
 function registerFile(file) {
   const name = file.name;
   const fileId = makeFileId(file);
+  document.getElementById('play-status').textContent = `已选择 ${name}`;
   fileRegistry[fileId] = file;
 
   // 持久化文件列表（对象数组）
@@ -766,7 +1316,7 @@ function activateFile(fileId, name) {
     audio.src = '';
     const hint = document.getElementById('no-file-hint');
     hint.style.display = 'flex';
-    hint.innerHTML = `<div style="text-align:center;line-height:2;padding:6px 10px;background:#3a2000;border-bottom:1px solid #FFD700;font-size:12px;">
+    hint.innerHTML = `<div class="hint-banner">
       ⚠️ 音频文件需重新关联，请点击左侧"导入音频"重新选择：${escHtml(name)}
     </div>`;
     hint.style.cssText = 'display:block;flex:none;';
@@ -830,6 +1380,10 @@ function escAttr(s) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 }
+
+document.querySelectorAll('.theme-chip').forEach((chip) => {
+  chip.addEventListener('click', () => applyTheme(chip.dataset.theme));
+});
 
 // =============================
 // 播放控制
@@ -1239,6 +1793,8 @@ document.getElementById('modal-overlay').addEventListener('click', function(e) {
 // 初始化
 // =============================
 function init() {
+  applyTheme(lsGet('sitman-theme', 'classic'));
+
   // 渲染文件列表
   renderFileList();
 
@@ -1264,7 +1820,7 @@ function init() {
     // 顶部横幅提示需重新关联
     const hint = document.getElementById('no-file-hint');
     hint.style.cssText = 'display:block;flex:none;';
-    hint.innerHTML = `<div style="text-align:center;line-height:2;padding:6px 10px;background:#3a2000;border-bottom:1px solid #FFD700;font-size:12px;">
+    hint.innerHTML = `<div class="hint-banner">
       ⚠️ 音频文件需重新关联，请点击左侧"导入音频"重新选择：${escHtml(first.name)}
     </div>`;
     // 渲染初始 view
