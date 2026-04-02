@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SitMan Web — 复读机</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-size: 13px;
+}
+
+/* ===== 标题栏 ===== */
+#titlebar {
+  background: #0f3460;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #e94560;
+  flex-shrink: 0;
+}
+#titlebar h1 { font-size: 15px; font-weight: 700; color: #e94560; }
+#current-file-name { color: #aaa; font-size: 12px; }
+#play-status { margin-left: auto; font-size: 11px; color: #FFD700; }
+
+/* ===== 三栏布局 ===== */
+#main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ===== 左栏 ===== */
+#left-panel {
+  width: 180px;
+  background: #16213e;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #0f3460;
+  flex-shrink: 0;
+}
+#left-panel .panel-title {
+  background: #0f3460;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFD700;
+  letter-spacing: 0.5px;
+}
+#file-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.file-item {
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  border-bottom: 1px solid #0f3460;
+  transition: background 0.15s;
+}
+.file-item:hover { background: #0f3460; }
+.file-item.active { background: #e94560; }
+.file-item .fname {
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.file-item .del-btn {
+  font-size: 11px;
+  color: #aaa;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+.file-item .del-btn:hover { color: #e94560; }
+#left-actions {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid #0f3460;
+}
+.btn {
+  background: #0f3460;
+  color: #e0e0e0;
+  border: 1px solid #1a3a6e;
+  border-radius: 4px;
+  padding: 5px 8px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background 0.15s;
+  text-align: center;
+}
+.btn:hover { background: #1a3a6e; }
+.btn.primary { background: #e94560; border-color: #e94560; }
+.btn.primary:hover { background: #c73652; }
+.btn.gold { background: #b8960c; border-color: #FFD700; color: #fff; }
+.btn.gold:hover { background: #FFD700; color: #1a1a2e; }
+
+/* ===== 中栏 ===== */
+#center-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* 播放控制栏 */
+#player-bar {
+  background: #0f3460;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e94560;
+  flex-shrink: 0;
+}
+#progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+#progress-container {
+  flex: 1;
+  position: relative;
+}
+#progress-bar {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: #16213e;
+  cursor: pointer;
+  outline: none;
+}
+#progress-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #FFD700;
+  cursor: pointer;
+}
+#time-display { font-size: 12px; color: #FFD700; white-space: nowrap; min-width: 100px; text-align: right; }
+#controls-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ctrl-btn {
+  background: #16213e;
+  color: #e0e0e0;
+  border: 1px solid #1a3a6e;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.15s;
+}
+.ctrl-btn:hover { background: #1a3a6e; }
+.ctrl-btn.active { background: #e94560; border-color: #e94560; }
+#speed-select {
+  background: #16213e;
+  color: #FFD700;
+  border: 1px solid #1a3a6e;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+#ab-info { font-size: 11px; color: #FFD700; }
+
+/* 标注内容区 */
+#notes-area {
+  flex: 1;
+  background: #0d2137;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.note-block {
+  background: rgba(0,0,0,0.25);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.note-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: rgba(0,0,0,0.35);
+  cursor: pointer;
+  user-select: none;
+}
+.note-block-title {
+  color: #ff4444;
+  font-weight: 700;
+  font-size: 13px;
+}
+.note-block-toggle { color: #FFD700; font-size: 12px; }
+.note-block-body { padding: 8px 10px; }
+.note-block-body.collapsed { display: none; }
+
+.note-edit {
+  width: 100%;
+  min-height: 80px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+}
+.note-edit:focus { border-color: #FFD700; background: rgba(255,255,255,0.15); }
+
+/* contenteditable 渲染区 */
+.note-rendered {
+  min-height: 80px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #fff;
+  white-space: pre-wrap;
+  word-break: break-word;
+  outline: none;
+}
+.note-rendered:focus { border-color: #FFD700; background: rgba(255,255,255,0.15); }
+.note-rendered:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.4); }
+
+.ts-link {
+  color: #FFD700;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: 600;
+}
+.ts-link:hover { color: #fff; }
+
+.note-view {
+  min-height: 60px;
+  padding: 8px;
+  color: #e0e0e0;
+  line-height: 1.7;
+  cursor: text;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.note-view .ts-link {
+  color: #FFD700;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: bold;
+}
+.note-view .ts-link:hover { color: #FFA500; }
+
+/* 听写区 */
+#dictation-wrap { display: flex; flex-direction: column; gap: 6px; }
+#dictation-textarea {
+  width: 100%;
+  min-height: 100px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+}
+#dictation-textarea:focus { border-color: #FFD700; }
+#dictation-actions { display: flex; gap: 6px; }
+
+/* ===== 右栏 ===== */
+#right-panel {
+  width: 160px;
+  background: #16213e;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #0f3460;
+  flex-shrink: 0;
+}
+#right-panel .panel-title {
+  background: #0f3460;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #FFD700;
+}
+#segment-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.seg-item {
+  padding: 5px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #0f3460;
+  font-size: 12px;
+  transition: background 0.15s;
+}
+.seg-item:hover { background: #0f3460; }
+.seg-item .seg-time { color: #FFD700; font-family: monospace; }
+.seg-item .seg-del {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0;
+}
+.seg-item .seg-del:hover { color: #e94560; }
+#right-actions {
+  padding: 8px;
+  border-top: 1px solid #0f3460;
+}
+
+/* ===== 批改对话框 ===== */
+#modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+#modal-overlay.open { display: flex; }
+#modal-box {
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 8px;
+  width: 700px;
+  max-width: 95vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#modal-header {
+  background: #0f3460;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#modal-header h2 { font-size: 14px; color: #FFD700; }
+#modal-close { background: none; border: none; color: #aaa; font-size: 18px; cursor: pointer; }
+#modal-close:hover { color: #fff; }
+#modal-body {
+  display: flex;
+  gap: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.modal-col {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.modal-col:first-child { border-right: 1px solid #0f3460; }
+.modal-col label { font-size: 11px; color: #aaa; font-weight: 700; }
+#my-answer-display {
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 13px;
+  line-height: 1.8;
+  min-height: 100px;
+}
+#ref-answer-input {
+  width: 100%;
+  min-height: 120px;
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+  border: 1px solid #1a3a6e;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 12px;
+  resize: vertical;
+  font-family: inherit;
+}
+#modal-footer {
+  padding: 10px 14px;
+  background: #0f3460;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.word-correct { color: #4CAF50; font-weight: 600; }
+.word-wrong { color: #e94560; font-weight: 600; text-decoration: line-through; }
+.word-missing { color: #FF9800; font-style: italic; }
+
+/* ===== 隐藏文件输入 ===== */
+#file-input { display: none; }
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1a3a6e; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #0f3460; }
+
+/* ===== 无文件提示 ===== */
+#no-file-hint {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(160,200,220,0.7);
+  font-size: 14px;
+  background: #0d2137;
+}
+</style>
+</head>
+<body>
+
+<!-- 隐藏文件输入 -->
+<input type="file" id="file-input" accept="audio/*,video/*,video/mp4,video/webm,video/ogg,video/quicktime">
+<input type="file" id="folder-input" accept="audio/*,video/*" webkitdirectory multiple style="display:none">
+
+<!-- 标题栏 -->
+<div id="titlebar">
+  <h1>SitMan Web</h1>
+  <span id="current-file-name">未选择文件</span>
+  <span id="play-status">●</span>
+</div>
+
+<!-- 三栏 -->
+<div id="main-layout">
+
+  <!-- 左栏 -->
+  <div id="left-panel">
+    <div class="panel-title">课程列表</div>
+    <div id="file-list"></div>
+    <div id="left-actions">
+      <button class="btn primary" onclick="triggerFileInput()">+ 导入文件</button>
+      <button class="btn" onclick="triggerFolderInput()" style="margin-top:4px;">📁 导入文件夹</button>
+      <button class="btn" onclick="clearAllFiles()" style="margin-top:4px;color:#ff6b6b;">✕ 清空列表</button>
+    </div>
+  </div>
+
+  <!-- 中栏 -->
+  <div id="center-panel">
+    <!-- 播放控制 -->
+    <div id="player-bar">
+      <div id="progress-row">
+        <div id="progress-container">
+          <input type="range" id="progress-bar" min="0" max="100" step="0.1" value="0" style="width:100%;">
+          <div id="marker-a" style="position:absolute;top:0;width:2px;height:100%;background:#00FF00;pointer-events:none;display:none;"></div>
+          <div id="marker-b" style="position:absolute;top:0;width:2px;height:100%;background:#FF4444;pointer-events:none;display:none;"></div>
+        </div>
+        <span id="time-display">0:00 / 0:00</span>
+      </div>
+      <div id="controls-row">
+        <button class="ctrl-btn" id="btn-rewind" onclick="skip(-SKIP_SECONDS)" title="后退5s">⏮ -5s</button>
+        <button class="ctrl-btn" id="btn-play" onclick="togglePlay()" title="播放/暂停">▶ 播放</button>
+        <button class="ctrl-btn" id="btn-forward" onclick="skip(SKIP_SECONDS)" title="前进5s">+5s ⏭</button>
+        <button class="ctrl-btn" id="btn-stop" onclick="stopAudio()" title="停止">⏹</button>
+        <span style="width:1px;background:#1a3a6e;height:20px;display:inline-block;margin:0 2px;"></span>
+        <button class="ctrl-btn" id="btn-set-a" onclick="setPointA()" title="设置A点">A</button>
+        <button class="ctrl-btn" id="btn-set-b" onclick="setPointB()" title="设置B点">B</button>
+        <button class="ctrl-btn" id="btn-ab-loop" onclick="toggleABLoop()" title="A-B循环">A↔B</button>
+        <button class="ctrl-btn" id="btn-clear-ab" onclick="clearAB()" title="清除AB点">清除AB</button>
+        <span id="ab-info">A:-- B:--</span>
+        <span style="margin-left:auto;"></span>
+        <label style="font-size:11px;color:#aaa;">速度:</label>
+        <select id="speed-select" onchange="setSpeed(this.value)">
+          <option value="0.5">0.5x</option>
+          <option value="0.75">0.75x</option>
+          <option value="1.0" selected>1.0x</option>
+          <option value="1.25">1.25x</option>
+          <option value="1.5">1.5x</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 内容区（无文件时显示提示） -->
+    <div id="no-file-hint">← 点击左侧"导入音频"开始使用</div>
+
+    <!-- 标注区（有文件时显示） -->
+    <div id="notes-area" style="display:none;">
+
+      <!-- 生词摘录 -->
+      <div class="note-block" id="block-vocab">
+        <div class="note-block-header" onclick="toggleBlock('vocab')">
+          <span class="note-block-title">[生词摘录]</span>
+          <span class="note-block-toggle" id="toggle-vocab">▼</span>
+        </div>
+        <div class="note-block-body" id="body-vocab">
+          <div class="note-rendered"
+               id="vocab-editor"
+               contenteditable="true"
+               data-placeholder="输入生词和时间戳，如：[01:23.5] vocabulary 词汇"
+               spellcheck="false"></div>
+          <div id="vocab-view" class="note-view" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- 要点摘录 -->
+      <div class="note-block" id="block-keypoints">
+        <div class="note-block-header" onclick="toggleBlock('keypoints')">
+          <span class="note-block-title">[要点摘录]</span>
+          <span class="note-block-toggle" id="toggle-keypoints">▼</span>
+        </div>
+        <div class="note-block-body" id="body-keypoints">
+          <div class="note-rendered"
+               id="keypoints-editor"
+               contenteditable="true"
+               data-placeholder="输入要点和时间戳，如：[01:30.0]-[02:00.0] 主要论点"
+               spellcheck="false"></div>
+          <div id="keypoints-view" class="note-view" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- 我的听写 -->
+      <div class="note-block" id="block-dictation">
+        <div class="note-block-header" onclick="toggleBlock('dictation')">
+          <span class="note-block-title">[我的听写]</span>
+          <span class="note-block-toggle" id="toggle-dictation">▼</span>
+        </div>
+        <div class="note-block-body" id="body-dictation">
+          <div id="dictation-wrap">
+            <textarea id="dictation-textarea"
+                      placeholder="在此输入听写内容，可按分段编号组织，如：&#10;第1段：...&#10;第2段：..."
+                      spellcheck="false"></textarea>
+            <div id="dictation-actions">
+              <button class="btn gold" onclick="openGradingModal()">批改</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 右栏 -->
+  <div id="right-panel">
+    <div class="panel-title">分段点</div>
+    <div id="segment-list"></div>
+    <div id="right-actions">
+      <button class="btn" onclick="addSegment()" style="width:100%">+ 添加当前位置</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- 批改对话框 -->
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div id="modal-header">
+      <h2>听写批改</h2>
+      <button id="modal-close" onclick="closeGradingModal()">✕</button>
+    </div>
+    <div id="modal-body">
+      <div class="modal-col">
+        <label>我的输入</label>
+        <div id="my-answer-display"></div>
+      </div>
+      <div class="modal-col">
+        <label>参考答案（可手动填写）</label>
+        <textarea id="ref-answer-input" placeholder="在此填写参考答案..."></textarea>
+      </div>
+    </div>
+    <div id="modal-footer">
+      <button class="btn" onclick="runGrading()">开始批改</button>
+      <button class="btn" onclick="closeGradingModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<audio id="audio-player" preload="metadata"></audio>
+
+<script>
+// =============================
+// 常量
+// =============================
+const SKIP_SECONDS = 5;
+const DEBOUNCE_MS = 500;
+
+// =============================
+// 工具函数
+// =============================
+function lsGet(key, def) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? def; }
+  catch { return def; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+}
+
+function fmtTime(s) {
+  if (isNaN(s) || s < 0) s = 0;
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = (s % 60).toFixed(1);
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(4,'0')}`;
+  return `${m}:${String(sec).padStart(4,'0')}`;
+}
+
+function parseTimestamp(str) {
+  // [MM:SS.s] or [HH:MM:SS.s]
+  const m2 = str.match(/\[(\d+):(\d+\.?\d*)\]/);
+  if (m2) return parseInt(m2[1]) * 60 + parseFloat(m2[2]);
+  const m3 = str.match(/\[(\d+):(\d+):(\d+\.?\d*)\]/);
+  if (m3) return parseInt(m3[1]) * 3600 + parseInt(m3[2]) * 60 + parseFloat(m3[3]);
+  return null;
+}
+
+function seekTo(t) {
+  if (!audio.src) return;
+  const dur = audio.duration;
+  if (!isNaN(dur) && dur > 0) {
+    audio.currentTime = Math.max(0, Math.min(t, dur));
+  }
+}
+
+// =============================
+// 工具：生成文件唯一ID
+// =============================
+function makeFileId(file) {
+  return `${file.name}_${file.size}_${file.lastModified}`;
+}
+
+// =============================
+// 状态
+// =============================
+const audio = document.getElementById('audio-player');
+let currentFileName = null;  // 显示用，file.name
+let currentFileId = null;    // 操作用，makeFileId 生成
+let fileRegistry = {};   // fileId -> File object (runtime only)
+let currentBlobUrl = null; // A5：跟踪当前 blob URL，切换时 revoke 防内存泄露
+let pointA = null;
+let pointB = null;
+let abLoopEnabled = false;
+let abRafId = null;
+let isDraggingProgress = false;
+let saveDebounceTimers = {};
+
+// =============================
+// 文件管理
+// =============================
+function triggerFileInput() {
+  document.getElementById('file-input').click();
+}
+
+function triggerFolderInput() {
+  document.getElementById('folder-input').click();
+}
+
+const MEDIA_TYPES = /^(audio|video)\//;
+
+document.getElementById('file-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  registerFile(file);
+  e.target.value = '';
+});
+
+document.getElementById('folder-input').addEventListener('change', function(e) {
+  const files = Array.from(e.target.files).filter(f => MEDIA_TYPES.test(f.type) && !f.name.startsWith('._'));
+  if (files.length === 0) return;
+  files.forEach(f => registerFile(f));
+  e.target.value = '';
+});
+
+function registerFile(file) {
+  const name = file.name;
+  const fileId = makeFileId(file);
+  fileRegistry[fileId] = file;
+
+  // 持久化文件列表（对象数组）
+  const list = lsGet('sitman_files', []);
+  // 兼容旧格式（字符串数组 → 对象数组）
+  const normalizedList = list.map(item => typeof item === 'string' ? {name: item, fileId: item} : item);
+  if (!normalizedList.some(item => item.fileId === fileId)) {
+    normalizedList.push({name, fileId});
+    lsSet('sitman_files', normalizedList);
+  }
+
+  renderFileList();
+  activateFile(fileId, name);
+}
+
+function renderFileList() {
+  const rawList = lsGet('sitman_files', []);
+  // 兼容旧格式
+  const list = rawList.map(item => typeof item === 'string' ? {name: item, fileId: item} : item);
+  const container = document.getElementById('file-list');
+  container.innerHTML = '';
+  list.forEach(entry => {
+    const {name, fileId} = entry;
+    const item = document.createElement('div');
+    item.className = 'file-item' + (fileId === currentFileId ? ' active' : '');
+    item.innerHTML = `
+      <span class="fname" title="${escHtml(name)}">${escHtml(name)}</span>
+      <button class="del-btn" title="删除">✕</button>
+    `;
+    item.querySelector('.fname').addEventListener('click', () => activateFile(fileId, name));
+    item.querySelector('.fname').addEventListener('dblclick', () => {
+      activateFile(fileId, name);
+      if (fileRegistry[fileId]) audio.play().catch(err => {
+        document.getElementById('play-status').textContent = '播放失败: ' + err.message;
+      });
+    });
+    item.querySelector('.del-btn').addEventListener('click', (e) => deleteFile(e, fileId));
+    container.appendChild(item);
+  });
+}
+
+function activateFile(fileId, name) {
+  clearAB();
+  currentFileId = fileId;
+  currentFileName = name;
+  document.getElementById('current-file-name').textContent = name;
+  renderFileList();
+  renderSegmentList();
+  loadNotes();
+
+  const file = fileRegistry[fileId];
+  if (file) {
+    if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); }
+    currentBlobUrl = URL.createObjectURL(file);
+    audio.src = currentBlobUrl;
+    // 切换文件时重置播放按钮状态（audio.src 赋值触发 emptied 而非 pause）
+    document.getElementById('btn-play').textContent = '▶ 播放';
+    document.getElementById('play-status').textContent = '●';
+    document.getElementById('no-file-hint').style.display = 'none';
+    document.getElementById('notes-area').style.display = 'flex';
+    // 渲染初始 view
+    renderEditorView('vocab-editor', 'vocab-view');
+    renderEditorView('keypoints-editor', 'keypoints-view');
+  } else {
+    // A-5：文件未重新导入，但 notes-area 仍显示标注内容，顶部显示横幅提示
+    audio.src = '';
+    const hint = document.getElementById('no-file-hint');
+    hint.style.display = 'flex';
+    hint.innerHTML = `<div style="text-align:center;line-height:2;padding:6px 10px;background:#3a2000;border-bottom:1px solid #FFD700;font-size:12px;">
+      ⚠️ 音频文件需重新关联，请点击左侧"导入音频"重新选择：${escHtml(name)}
+    </div>`;
+    hint.style.cssText = 'display:block;flex:none;';
+    document.getElementById('notes-area').style.display = 'flex';
+    // 渲染初始 view
+    renderEditorView('vocab-editor', 'vocab-view');
+    renderEditorView('keypoints-editor', 'keypoints-view');
+  }
+}
+
+function deleteFile(e, fileId) {
+  e.stopPropagation();
+  const rawList = lsGet('sitman_files', []);
+  const list = rawList.map(item => typeof item === 'string' ? {name: item, fileId: item} : item)
+                      .filter(item => item.fileId !== fileId);
+  lsSet('sitman_files', list);
+  delete fileRegistry[fileId];
+  if (currentFileId === fileId) {
+    currentFileId = null;
+    currentFileName = null;
+    if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); currentBlobUrl = null; } // A5
+    audio.src = '';
+    document.getElementById('current-file-name').textContent = '未选择文件';
+    const hint = document.getElementById('no-file-hint');
+    hint.style.cssText = '';
+    hint.style.display = 'flex';
+    hint.textContent = '← 点击左侧"导入音频"开始使用';
+    document.getElementById('notes-area').style.display = 'none';
+  }
+  renderFileList();
+}
+
+function clearAllFiles() {
+  if (!confirm('确定清空整个播放列表吗？')) return;
+  lsSet('sitman_files', []);
+  for (const id in fileRegistry) delete fileRegistry[id];
+  if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); currentBlobUrl = null; }
+  audio.src = '';
+  currentFileId = null;
+  currentFileName = null;
+  clearAB();
+  document.getElementById('current-file-name').textContent = '未选择文件';
+  document.getElementById('btn-play').textContent = '▶ 播放';
+  document.getElementById('play-status').textContent = '●';
+  const hint = document.getElementById('no-file-hint');
+  hint.style.cssText = '';
+  hint.style.display = 'flex';
+  hint.textContent = '← 点击左侧"导入音频"开始使用';
+  document.getElementById('notes-area').style.display = 'none';
+  renderFileList();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// =============================
+// 播放控制
+// =============================
+function togglePlay() {
+  if (!audio.src) return;
+  if (audio.paused) {
+    audio.play().catch(err => {
+      document.getElementById('play-status').textContent = '播放失败: ' + err.message;
+    });
+  } else {
+    audio.pause();
+  }
+}
+
+function stopAudio() {
+  audio.pause();
+  audio.currentTime = 0;
+}
+
+function skip(delta) {
+  if (!audio.src) return;
+  audio.currentTime = Math.max(0, Math.min(audio.duration || 0, audio.currentTime + delta));
+}
+
+function setSpeed(val) {
+  audio.playbackRate = parseFloat(val);
+}
+
+audio.addEventListener('play', () => {
+  document.getElementById('btn-play').textContent = '⏸ 暂停';
+  document.getElementById('play-status').textContent = '▶ 播放中';
+});
+audio.addEventListener('pause', () => {
+  document.getElementById('btn-play').textContent = '▶ 播放';
+  document.getElementById('play-status').textContent = '⏸ 已暂停';
+});
+audio.addEventListener('ended', () => {
+  document.getElementById('btn-play').textContent = '▶ 播放';
+  document.getElementById('play-status').textContent = '⏹ 已结束';
+});
+
+// 进度条
+const progressBar = document.getElementById('progress-bar');
+
+progressBar.addEventListener('mousedown', () => { isDraggingProgress = true; });
+progressBar.addEventListener('touchstart', () => { isDraggingProgress = true; }, {passive:true});
+
+progressBar.addEventListener('input', () => {
+  if (!audio.duration) return;
+  const t = (progressBar.value / 100) * audio.duration;
+  document.getElementById('time-display').textContent = fmtTime(t) + ' / ' + fmtTime(audio.duration);
+});
+
+progressBar.addEventListener('change', () => {
+  if (!audio.duration) return;
+  audio.currentTime = (progressBar.value / 100) * audio.duration;
+  isDraggingProgress = false;
+});
+
+progressBar.addEventListener('mouseup', () => { isDraggingProgress = false; });
+progressBar.addEventListener('touchend', () => { isDraggingProgress = false; }, {passive:true});
+
+audio.addEventListener('timeupdate', () => {
+  if (!isDraggingProgress && audio.duration) {
+    progressBar.value = (audio.currentTime / audio.duration) * 100;
+    document.getElementById('time-display').textContent =
+      fmtTime(audio.currentTime) + ' / ' + fmtTime(audio.duration);
+  }
+  checkAB(); // A1：timeupdate 主检测，精度远高于 setInterval
+});
+
+audio.addEventListener('loadedmetadata', () => {
+  progressBar.value = 0;
+  document.getElementById('time-display').textContent = '0:00.0 / ' + fmtTime(audio.duration);
+});
+
+// =============================
+// A-B 循环
+// =============================
+function setPointA() {
+  pointA = audio.currentTime;
+  updateABInfo();
+  updateABMarkers();
+}
+function setPointB() {
+  pointB = audio.currentTime;
+  updateABInfo();
+  updateABMarkers();
+}
+function updateABMarkers() {
+  const dur = audio.duration;
+  const ma = document.getElementById('marker-a');
+  const mb = document.getElementById('marker-b');
+  if (!ma || !mb || isNaN(dur) || dur === 0) return;
+  if (pointA !== null) { ma.style.left = (pointA / dur * 100) + '%'; ma.style.display = 'block'; }
+  if (pointB !== null) { mb.style.left = (pointB / dur * 100) + '%'; mb.style.display = 'block'; }
+}
+function clearAB() {
+  pointA = null; pointB = null;
+  abLoopEnabled = false;
+  cancelAnimationFrame(abRafId);
+  abRafId = null;
+  document.getElementById('btn-ab-loop').classList.remove('active');
+  // 隐藏标记
+  const ma = document.getElementById('marker-a');
+  const mb = document.getElementById('marker-b');
+  if (ma) ma.style.display = 'none';
+  if (mb) mb.style.display = 'none';
+  updateABInfo();
+}
+function toggleABLoop() {
+  if (!abLoopEnabled && (pointA === null || pointB === null)) {
+    document.getElementById('play-status').textContent = '请先设置A点和B点';
+    return;
+  }
+  abLoopEnabled = !abLoopEnabled;
+  const btn = document.getElementById('btn-ab-loop');
+  if (abLoopEnabled) {
+    btn.classList.add('active');
+    cancelAnimationFrame(abRafId);
+    abRafId = requestAnimationFrame(abRafLoop);
+  } else {
+    btn.classList.remove('active');
+    cancelAnimationFrame(abRafId);
+    abRafId = null;
+  }
+}
+function checkAB() {
+  // timeupdate 兜底：后台节流时 rAF 暂停，由此补漏
+  if (!abLoopEnabled || pointA === null || pointB === null) return;
+  if (audio.paused) return;
+  const a = Math.min(pointA, pointB);
+  const b = Math.max(pointA, pointB);
+  if (audio.currentTime >= b) {
+    audio.currentTime = a;
+  }
+}
+
+function abRafLoop() {
+  if (!abLoopEnabled || pointA === null || pointB === null) {
+    abRafId = null;
+    return;
+  }
+  if (!audio.paused && audio.currentTime >= Math.max(pointA, pointB)) {
+    audio.currentTime = Math.min(pointA, pointB);
+  }
+  abRafId = requestAnimationFrame(abRafLoop);
+}
+function updateABInfo() {
+  const a = pointA !== null ? fmtTime(pointA) : '--';
+  const b = pointB !== null ? fmtTime(pointB) : '--';
+  document.getElementById('ab-info').textContent = `A:${a} B:${b}`;
+}
+
+// =============================
+// 分段点
+// =============================
+function segKey(fileId) { return `sitman_segments_${fileId}`; }
+
+function getSegments() {
+  if (!currentFileId) return [];
+  return lsGet(segKey(currentFileId), []);
+}
+function saveSegments(segs) {
+  if (!currentFileId) return;
+  lsSet(segKey(currentFileId), segs);
+}
+
+function addSegment() {
+  if (!audio.src || !currentFileId) return;
+  const t = audio.currentTime;
+  const segs = getSegments();
+  const isDup = segs.some(s => Math.abs(s - t) < 0.1);
+  if (isDup) return;
+  segs.push(t);
+  segs.sort((a, b) => a - b);
+  saveSegments(segs);
+  renderSegmentList();
+}
+
+function deleteSegment(idx) {
+  const segs = getSegments();
+  segs.splice(idx, 1);
+  saveSegments(segs);
+  renderSegmentList();
+}
+
+function renderSegmentList() {
+  const container = document.getElementById('segment-list');
+  container.innerHTML = '';
+  const segs = getSegments();
+  segs.forEach((t, i) => {
+    const item = document.createElement('div');
+    item.className = 'seg-item';
+    item.innerHTML = `
+      <span class="seg-time">${fmtTime(t)}</span>
+      <button class="seg-del" onclick="deleteSegment(${i})" title="删除">✕</button>
+    `;
+    item.querySelector('.seg-time').addEventListener('click', () => seekTo(t));
+    container.appendChild(item);
+  });
+}
+
+// =============================
+// 标注内容 — contenteditable
+// =============================
+function notesKey(fileId) { return `sitman_notes_${fileId}`; }
+
+function loadNotes() {
+  if (!currentFileId) return;
+  const data = lsGet(notesKey(currentFileId), {vocab:'', keypoints:'', dictation:''});
+  setEditorText('vocab-editor', data.vocab || '');
+  setEditorText('keypoints-editor', data.keypoints || '');
+  document.getElementById('dictation-textarea').value = data.dictation || '';
+}
+
+function saveNotes() {
+  if (!currentFileId) return;
+  const data = {
+    vocab: getEditorText('vocab-editor'),
+    keypoints: getEditorText('keypoints-editor'),
+    dictation: document.getElementById('dictation-textarea').value
+  };
+  lsSet(notesKey(currentFileId), data);
+}
+
+// 将纯文本存入 contenteditable，不做 innerHTML 注入
+function setEditorText(id, text) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+}
+
+function getEditorText(id) {
+  return document.getElementById(id).textContent;
+}
+
+// MutationObserver debounce 自动保存 contenteditable
+function setupEditorObserver(id) {
+  const el = document.getElementById(id);
+  const observer = new MutationObserver(() => {
+    clearTimeout(saveDebounceTimers[id]);
+    saveDebounceTimers[id] = setTimeout(saveNotes, DEBOUNCE_MS);
+  });
+  observer.observe(el, { childList: true, characterData: true, subtree: true });
+}
+
+// 将 editor 文本渲染为可点击时间戳 view
+function renderEditorView(editorId, viewId) {
+  const editor = document.getElementById(editorId);
+  const view = document.getElementById(viewId);
+  const text = editor.textContent || '';
+  // 转义 HTML，然后把时间戳替换为可点击 span
+  const escaped = escHtml(text);
+  const rendered = escaped.replace(
+    /\[(\d+:\d+(?::\d+)?\.?\d*)\]/g,
+    (match, ts) => {
+      const secs = parseTimestamp('[' + ts + ']');
+      return secs !== null
+        ? `<span class="ts-link" data-time="${secs}">[${ts}]</span>`
+        : match;
+    }
+  );
+  view.innerHTML = rendered;
+  // 绑定点击事件
+  view.querySelectorAll('.ts-link').forEach(span => {
+    span.onclick = () => seekTo(parseFloat(span.dataset.time));
+  });
+}
+
+// focusin/focusout 切换 editor 和 view
+function setupEditorToggle(editorId, viewId) {
+  const editor = document.getElementById(editorId);
+  const view = document.getElementById(viewId);
+
+  editor.addEventListener('focusin', () => {
+    view.style.display = 'none';
+    editor.style.display = 'block';
+  });
+
+  editor.addEventListener('focusout', () => {
+    editor.style.display = 'none';
+    view.style.display = 'block';
+    renderEditorView(editorId, viewId);
+  });
+
+  // view 点击时切回 editor
+  view.addEventListener('click', (e) => {
+    if (e.target.classList.contains('ts-link')) return; // 时间戳点击不切换
+    view.style.display = 'none';
+    editor.style.display = 'block';
+    editor.focus();
+  });
+
+  // 初始状态：隐藏编辑器，显示渲染视图
+  editor.style.display = 'none';
+  view.style.display = 'block';
+}
+
+// textarea 自动保存
+document.getElementById('dictation-textarea').addEventListener('input', () => {
+  clearTimeout(saveDebounceTimers['dictation']);
+  saveDebounceTimers['dictation'] = setTimeout(saveNotes, DEBOUNCE_MS);
+});
+
+// A2：页面关闭/切换时强制同步保存，防止 debounce 未完成就丢失数据
+window.addEventListener('beforeunload', () => {
+  saveNotes();
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') saveNotes();
+});
+
+// 折叠控制
+function toggleBlock(name) {
+  const body = document.getElementById('body-' + name);
+  const toggle = document.getElementById('toggle-' + name);
+  if (body.classList.contains('collapsed')) {
+    body.classList.remove('collapsed');
+    toggle.textContent = '▼';
+  } else {
+    body.classList.add('collapsed');
+    toggle.textContent = '▶';
+  }
+}
+
+// =============================
+// 听写批改
+// =============================
+function openGradingModal() {
+  const myText = document.getElementById('dictation-textarea').value.trim();
+  // 显示我的输入
+  document.getElementById('my-answer-display').textContent = myText || '（无内容）';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeGradingModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function runGrading() {
+  const myText = document.getElementById('dictation-textarea').value.trim();
+  const refText = document.getElementById('ref-answer-input').value.trim();
+
+  if (!refText) {
+    document.getElementById('my-answer-display').textContent = myText || '（无内容）';
+    return;
+  }
+
+  const myWords = tokenize(myText);
+  const refWords = tokenize(refText);
+
+  // 简单逐词对比（最长公共子序列）
+  const diff = lcsAlign(myWords, refWords);
+  let html = '';
+  diff.forEach(item => {
+    if (item.type === 'match') {
+      html += `<span class="word-correct">${escHtml(item.word)}</span> `;
+    } else if (item.type === 'wrong') {
+      html += `<span class="word-wrong">${escHtml(item.word)}</span> `;
+    } else if (item.type === 'missing') {
+      html += `<span class="word-missing">[${escHtml(item.word)}]</span> `;
+    }
+  });
+  document.getElementById('my-answer-display').innerHTML = html || '（无内容）';
+}
+
+function tokenize(text) {
+  return text.toLowerCase().replace(/[^\w\s\u4e00-\u9fff]/g, ' ').split(/\s+/).filter(Boolean);
+}
+
+// LCS 对齐，返回 [{type:'match'|'wrong'|'missing', word}]
+function lcsAlign(a, b) {
+  const MAX_WORDS = 500;
+  if (a.length > MAX_WORDS) a = a.slice(0, MAX_WORDS);
+  if (b.length > MAX_WORDS) b = b.slice(0, MAX_WORDS);
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, () => new Array(n+1).fill(0));
+  for (let i=1;i<=m;i++) for (let j=1;j<=n;j++) {
+    if (a[i-1]===b[j-1]) dp[i][j]=dp[i-1][j-1]+1;
+    else dp[i][j]=Math.max(dp[i-1][j],dp[i][j-1]);
+  }
+  // 回溯
+  const result = [];
+  let i=m, j=n;
+  while (i>0 || j>0) {
+    if (i>0 && j>0 && a[i-1]===b[j-1]) {
+      result.unshift({type:'match', word: a[i-1]});
+      i--; j--;
+    } else if (j>0 && (i===0 || dp[i][j-1]>=dp[i-1][j])) {
+      result.unshift({type:'missing', word: b[j-1]});
+      j--;
+    } else {
+      result.unshift({type:'wrong', word: a[i-1]});
+      i--;
+    }
+  }
+  return result;
+}
+
+// 点击 overlay 关闭
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeGradingModal();
+});
+
+// =============================
+// 初始化
+// =============================
+function init() {
+  // 渲染文件列表
+  renderFileList();
+
+  // 设置 contenteditable observers 和 editor/view 切换
+  setupEditorObserver('vocab-editor');
+  setupEditorObserver('keypoints-editor');
+  setupEditorToggle('vocab-editor', 'vocab-view');
+  setupEditorToggle('keypoints-editor', 'keypoints-view');
+
+  // A-5：如果有文件列表，激活第一个，notes-area 直接显示（即使没有 File 对象）
+  const rawList = lsGet('sitman_files', []);
+  const list = rawList.map(item => typeof item === 'string' ? {name: item, fileId: item} : item);
+  if (list.length > 0 && !currentFileId) {
+    const first = list[0];
+    currentFileId = first.fileId;
+    currentFileName = first.name;
+    document.getElementById('current-file-name').textContent = first.name;
+    renderFileList();
+    renderSegmentList();
+    loadNotes();
+    // 显示标注区
+    document.getElementById('notes-area').style.display = 'flex';
+    // 顶部横幅提示需重新关联
+    const hint = document.getElementById('no-file-hint');
+    hint.style.cssText = 'display:block;flex:none;';
+    hint.innerHTML = `<div style="text-align:center;line-height:2;padding:6px 10px;background:#3a2000;border-bottom:1px solid #FFD700;font-size:12px;">
+      ⚠️ 音频文件需重新关联，请点击左侧"导入音频"重新选择：${escHtml(first.name)}
+    </div>`;
+    // 渲染初始 view
+    renderEditorView('vocab-editor', 'vocab-view');
+    renderEditorView('keypoints-editor', 'keypoints-view');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
