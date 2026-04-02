@@ -45,6 +45,20 @@ body {
   font-size: 13px;
 }
 
+button,
+label,
+input,
+select,
+.btn,
+.ctrl-btn,
+.file-item,
+.seg-item,
+.theme-chip,
+.note-block-header,
+.ts-link {
+  touch-action: manipulation;
+}
+
 /* ===== 标题栏 ===== */
 #titlebar {
   background: var(--surface);
@@ -1278,12 +1292,6 @@ function renderFileList() {
       <button class="del-btn" title="删除">✕</button>
     `;
     item.querySelector('.fname').addEventListener('click', () => activateFile(fileId, name));
-    item.querySelector('.fname').addEventListener('dblclick', () => {
-      activateFile(fileId, name);
-      if (fileRegistry[fileId]) audio.play().catch(err => {
-        document.getElementById('play-status').textContent = '播放失败: ' + err.message;
-      });
-    });
     item.querySelector('.del-btn').addEventListener('click', (e) => deleteFile(e, fileId));
     container.appendChild(item);
   });
